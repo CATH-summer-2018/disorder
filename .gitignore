@@ -1,0 +1,8 @@
+__pycache__
+input
+individual_fasta
+data
+*.gz
+*.out
+.*
+!.gitignore
