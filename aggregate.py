@@ -4,15 +4,16 @@ import os
 import pandas as pd
 
 def get_all_data(directory):
-    s = pd.Series()
     for folder in os.listdir(directory):
+        s=pd.Series()
         try:
-            for file in os.listdir(folder):
+            for file in os.listdir(directory+'/'+folder):
                 if 'result' not in file:
                     continue
-                df = pd.read_csv(directory+folder+file, sep='\t')
-                s[file] = df.DIS.mean()
-        except:
-            pass
-    return s
-get_all_data('./individual_fasta').to_csv('all_data.tsv', sep='\t')
+                df = pd.read_csv(directory+'/'+folder+'/'+file, sep='\t')
+                s[file[:7]] = df.DIS.mean()
+        except Exception as e:
+            print(e)
+        with open('all_data.tsv', 'a+') as f:
+            f.write(s.to_string() + '\n')
+get_all_data('./individual_fasta')
