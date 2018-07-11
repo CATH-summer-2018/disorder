@@ -7,21 +7,21 @@
 I used the iupred on all the sequences of domains in CATH to analyse domains and superfamilies that stand out.
 
 ## Reproducing
-1. Download all the seqences in cath from FTP server
-2. Extract the fasta sequences into separate files for each domain and separate folders for each superfamily using [extract_fasta]('./extract_fasta.py') script
-3. Using the [perform_iupred](./perform_iupred.sh) script create a .result file for each domain file, with calculated Disorder
-4. Using the *deleted* script calculate the mean for each domain and put it into one tsv
-5. ...
+1. Download all the seqences in CATH from FTP server
+2. Extract the fasta sequences into separate files for each domain and separate folders for each superfamily using [extract_fasta]('./scripts/extract_fasta.py') script
+3. Using the [designated script](./scripts/perform_full_iupred.sh) create a .long and .sjort file for each domain file, with calculated Disorder. Long and short stand for different calculation methods in iupred.
+4. Using the [get_mean](./scripts/get_mean.py) script calculate the mean for each domain and put it into 2 tsv files (long and short)
+5. Using [the big compiler script](./scripts/compile_all_data.py) put all info about each domain into [one big tsv]('./compiled.tsv')
+6. Using the compile_sfam function in the [module](./CATH_disorder.py) compile info about each SFAM into [another big tsv](./sfam_compiled.tsv)
 
-**To be improved**
 
 ## Results
+*in progress*
 
-The initial analysis suggests that most domains in CATH fall under the 0.5 cutoff range, as seen in graph below
+The initial analysis suggests that most domains in CATH fall under the 0.5 cutoff range, as seen in graph below.
 
 ![all_domains](./figs/all_domains.png)
 
-Only a small percentage (1.8%) of domains have a mean disorder score over 0.5. Among the superfamilies, only 3.2% of superfamilies have a mean disorder score higher than 0.5, which suggests that the superfamilies with higher disorder are smaller.
 
 ### Case study
 

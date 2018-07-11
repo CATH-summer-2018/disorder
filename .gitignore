@@ -1,8 +1,10 @@
 __pycache__
 input
 individual_fasta
+structures
 data
 *.gz
 *.out
 .*
 !.gitignore
+*.results
