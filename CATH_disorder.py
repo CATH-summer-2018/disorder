@@ -35,45 +35,127 @@ def plot_distr(short,
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
 
-def show_structure(domain):
-    '''
-    Uses nglview and requests to fetch domain PDB and show it in jupyter
-    '''
 
-    if (domain + '.pdb') in os.listdir('structures'):
-        return nglview.show_file('./structures/' + domain + '.pdb')
+
+
+
+def plt_scatter(s, col1, col2,
+                col_cutoff=False, cutoff=False,
+                savedname=False):
+    '''
+    Plots the scatter plot for 2 columns in the dataframe
+    '''
+    fig, ax = plt.subplots(figsize=(15,15))
+    x = s.sort_values(by=col1)[col2].values
+    y = s.sort_values(by=col1)[col1].values
+    ax.set_xlim(min(x), max(x))
+    ax.set_ylim(min(y), max(y))
+    ax.set_xlabel(col2)
+    ax.set_ylabel(col1)
+    if col_cutoff:
+        under = s[s[col_cutoff] < cutoff]
+        over = s[s[col_cutoff] >= cutoff]
+        x_under = under.sort_values(by=col1)[col2].values
+        y_under = under.sort_values(by=col1)[col1].values
+        x_over = over.sort_values(by=col1)[col2].values
+        y_over = over.sort_values(by=col1)[col1].values
+        ax.scatter(x_under, y_under, s=15, marker='x', c='blue')
+        ax.scatter(x_over, y_over, s=15, marker='x', c='red')
     else:
-        r = requests.get('http://www.cathdb.info/version/v4_2_0/api/rest/id/' + domain + '.pdb')
-        with open('./structures/' + domain + '.pdb', 'w') as file:
-            file.write(r.text)
-        return nglview.show_file('./structures/' + domain + '.pdb')
+        ax.scatter(x, y, s=15, marker='x', c='blue')
+    if savedname:
+        plt.savefig(savedname, bbox_inches='tight')
+    plt.show()
 
-def scrape_sfam(df, gr):
-    '''
-    Compiles information for each CATH superfamily rather than each domain
-    '''
-    dom_len = pd.Series()
-    long = pd.Series()
-    short = pd.Series()
-    std_long = pd.Series()
-    std_short = pd.Series()
-    for n, d in gr:
-        short[n] = d.SHORT.mean()
-        long[n] = d.LONG.mean()
-        std_short[n] = d.SHORT.std()
-        std_long[n] = d.LONG.std()
-        dom_len[n] = d.LEN.mean()
-    size = df.SFAM.value_counts()
-    sfam = pd.DataFrame({'SIZE' : size,
-                         'STD_SHORT' : std_short,
-                         'STD_LONG' : std_long,
-                         'LEN' : dom_len,
-                         'SHORT' : short,
-                        'LONG':long})
-    return sfam
 
-def compile_sfam(df):
-    gr = df.groupby('SFAM')
-    sfam = scrape_sfam(df, gr)
-    sfam['DIFF'] = (sfam['LONG'] - sfam['SHORT']).abs().round(4)
-    return sfam
+class Domain(object):
+    '''
+    Class for fetching stuff for a domain
+    '''
+    def __init__(self, df, domain):
+        self.domain = domain
+        self.long = pd.read_csv('./individual_fasta/'+df.loc[domain]['SFAM']+'/'+domain+'.long', sep='\t', index_col=0)
+        self.short = pd.read_csv('./individual_fasta/'+df.loc[domain]['SFAM']+'/'+domain+'.short', sep='\t', index_col=0)
+
+    def plot_disorder(self, method='both'):
+        '''
+        Plots the disorder for individual domain
+        '''
+        fig, ax = plt.subplots(figsize=(15,5))
+        ax.plot([0, len(self.long)], [0.5,0.5], color='black', linewidth=0.7)
+        ax.set_xlim(0, len(self.long))
+        ax.set_ylim(0,1)
+        if method == 'long':
+            ax.plot(self.long.DIS)
+        elif method == 'short':
+            ax.plot(self.short.DIS)
+        elif method == 'both':
+            ax.plot(self.long.DIS, color='blue', label='LONG')
+            ax.plot(self.short.DIS, color='orange', label='SHORT')
+            plt.legend()
+        else:
+            print("Wrong method")
+        plt.show()
+
+
+    def show_structure(self):
+        '''
+        Uses nglview and requests to fetch domain PDB and show it in jupyter
+        '''
+
+        if (self.domain + '.pdb') in os.listdir('structures'):
+            return nglview.show_file('./structures/' + self.domain + '.pdb')
+        else:
+            r = requests.get('http://www.cathdb.info/version/v4_2_0/api/rest/id/' + self.domain + '.pdb')
+            with open('./structures/' + self.domain + '.pdb', 'w') as file:
+                file.write(r.text)
+            return nglview.show_file('./structures/' + self.domain + '.pdb')
+
+
+
+
+
+
+class DomParser(object):
+    '''
+    Methods for quick work with domains DataFrame
+    '''
+    def __init__(self, df):
+        self.df = df
+
+    def get_sfam(self, sfam):
+        return self.df[self.df['SFAM'] == sfam]
+
+
+    def scrape_sfam(self, gr):
+        '''
+        Compiles information for each CATH superfamily rather than each domain
+        '''
+        dom_len = pd.Series()
+        long = pd.Series()
+        short = pd.Series()
+        std_long = pd.Series()
+        std_short = pd.Series()
+        for n, d in gr:
+            short[n] = d.SHORT.mean()
+            long[n] = d.LONG.mean()
+            std_short[n] = d.SHORT.std().round(6)
+            std_long[n] = d.LONG.std().round(6)
+            dom_len[n] = d.LEN.mean()
+        size = self.df.SFAM.value_counts()
+        sfam = pd.DataFrame({'SIZE' : size,
+                             'STD_SHORT' : std_short,
+                             'STD_LONG' : std_long,
+                             'LEN' : dom_len,
+                             'SHORT' : short,
+                            'LONG':long})
+        return sfam
+
+    def compile_sfam(self):
+        '''
+        Runs scrape_sfam for each superfamily using groupby
+        '''
+        gr = self.df.groupby('SFAM')
+        sfam = self.scrape_sfam(gr)
+        sfam['DIFF'] = (sfam['LONG'] - sfam['SHORT']).abs().round(6)
+        return sfam

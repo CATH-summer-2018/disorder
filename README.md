@@ -18,9 +18,17 @@ I used the iupred on all the sequences of domains in CATH to analyse domains and
 ## Results
 *in progress*
 
+### Domains
+
 The initial analysis suggests that most domains in CATH fall under the 0.5 cutoff range, as seen in graph below.
 
 ![all_domains](./figs/all_domains.png)
+
+### Superfamilies
+
+The scatter plot below allows us to see that most of the superfamilies with high disorder are relatively short - all superfamilies that have over 0.7 disorder are less than 100 aminoacids long.
+
+![scatter](./figs/LEN_SHORT_scatter.png)
 
 
 ### Case study
