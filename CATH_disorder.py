@@ -14,34 +14,9 @@ import scipy
 import nglview
 
 
-def plot_distr(short,
-               long,
-               title=False,
-               savedname=False,
-               legend=False):
-    '''
-    Plots distributions, usually used for showing how many domains have high disorder
-    '''
-    fig, ax = plt.subplots(figsize=(15,5))
-    ax.plot([0, max(len(long),len(short))], [0.5,0.5], color='black', linewidth=0.7)
-    s = ax.plot(short.sort_values().values, label='SHORT')
-    l = ax.plot(long.sort_values().values, label='LONG')
-    ax.set_xlim(0, max(len(short),len(long)))
-    if title:
-        plt.title(title)
-    if legend:
-        plt.legend()
-    if savedname:
-        plt.savefig(savedname, bbox_inches='tight')
-    plt.show()
-
-
-
-
-
 def plt_scatter(s, col1, col2,
                 col_cutoff=False, cutoff=False,
-                savedname=False):
+                savedname=False, title=False):
     '''
     Plots the scatter plot for 2 columns in the dataframe
     '''
@@ -63,6 +38,8 @@ def plt_scatter(s, col1, col2,
         ax.scatter(x_over, y_over, s=15, marker='x', c='red')
     else:
         ax.scatter(x, y, s=15, marker='x', c='blue')
+    if title:
+        plt.title(title)
     if savedname:
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
@@ -132,6 +109,9 @@ class DomParser(object):
         Compiles information for each CATH superfamily rather than each domain
         '''
         dom_len = pd.Series()
+        std_len = pd.Series()
+        max_len = pd.Series()
+        min_len = pd.Series()
         long = pd.Series()
         short = pd.Series()
         std_long = pd.Series()
@@ -141,14 +121,20 @@ class DomParser(object):
             long[n] = d.LONG.mean()
             std_short[n] = d.SHORT.std().round(6)
             std_long[n] = d.LONG.std().round(6)
-            dom_len[n] = d.LEN.mean()
+            dom_len[n] = d.LEN.mean().round(6)
+            std_len[n] = d.LEN.std().round(6)
+            min_len[n] = d.LEN.min()
+            max_len[n] = d.LEN.max()
         size = self.df.SFAM.value_counts()
         sfam = pd.DataFrame({'SIZE' : size,
                              'STD_SHORT' : std_short,
                              'STD_LONG' : std_long,
                              'LEN' : dom_len,
+                             'STD_LEN' : std_len,
                              'SHORT' : short,
-                            'LONG':long})
+                            'LONG':long,
+                            'MAX_LEN' : max_len,
+                            'MIN_LEN' : min_len})
         return sfam
 
     def compile_sfam(self):
@@ -157,5 +143,18 @@ class DomParser(object):
         '''
         gr = self.df.groupby('SFAM')
         sfam = self.scrape_sfam(gr)
-        sfam['DIFF'] = (sfam['LONG'] - sfam['SHORT']).abs().round(6)
+        sfam['DIS_DIFF'] = (sfam['LONG'] - sfam['SHORT']).abs().round(6)
+        sfam['STD_LEN_PERC'] = sfam['STD_LEN_PERC'] = sfam['STD_LEN']/sfam['LEN']
         return sfam
+
+    def plot_len_distr(self,sfam):
+        fig, ax = plt.subplots(figsize=(10,10))
+        data = self.get_sfam(sfam).LEN.values
+
+        ax.hist(data,
+                25,
+                edgecolor='black')
+        ax.set_xlim(0, max(data)*1.1)
+        plt.xlabel('Length')
+        plt.ylabel('Number of domains')
+        plt.show()
