@@ -109,7 +109,8 @@ class Domain(object):
             r = requests.get('http://www.cathdb.info/version/v4_2_0/api/rest/id/' + self.domain + '.pdb')
             with open('./structures/' + self.domain + '.pdb', 'w') as file:
                 file.write(r.text)
-            return nglview.show_file('./structures/' + self.domain + '.pdb')
+            view = nglview.show_file('./structures/' + self.domain + '.pdb')
+            return view
 
 
 
