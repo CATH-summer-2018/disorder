@@ -26,7 +26,7 @@ The initial analysis suggests that most domains in CATH fall under the 0.5 cutof
 
 ### Superfamilies
 
-The scatter plot below allows us to see that most of the superfamilies with high disorder are relatively short - all superfamilies that have over 0.7 disorder are less than 100 aminoacids long.
+The scatter plot below allows us to see that most of the superfamilies with high disorder are relatively short and that there is an inverse corellation between domain length and disorder.
 
 ![scatter](./figs/LEN_SHORT_scatter.png)
 

@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy
+import seaborn as sns
 
 import nglview
 
@@ -34,16 +35,38 @@ def plt_scatter(s, col1, col2,
         y_under = under.sort_values(by=col1)[col1].values
         x_over = over.sort_values(by=col1)[col2].values
         y_over = over.sort_values(by=col1)[col1].values
-        ax.scatter(x_under, y_under, s=15, marker='x', c='blue')
-        ax.scatter(x_over, y_over, s=15, marker='x', c='red')
+        ax.scatter(x_under, y_under, s=15, marker='x', c='#1E70AA')
+        ax.scatter(x_over, y_over, s=15, marker='x', c='blue')
     else:
-        ax.scatter(x, y, s=15, marker='x', c='blue')
+        ax.scatter(x, y, s=15, marker='x', c='#1E70AA')
     if title:
         plt.title(title)
     if savedname:
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
 
+
+def plt_regplot(s, col1, col2,
+                savedname=False, title=False):
+    '''
+    Plots the scatter plot for 2 columns in the dataframe
+    '''
+    fig, ax = plt.subplots(figsize=(15,15))
+    x = s.sort_values(by=col1)[col2].values
+    y = s.sort_values(by=col1)[col1].values
+    ax.set_xlim(min(x), max(x))
+    ax.set_ylim(min(y), max(y))
+    ax.set_xlabel(col2)
+    ax.set_ylabel(col1)
+    sns.regplot(x, y,
+    scatter_kws={"s": 15},
+    line_kws={'color':'blue'},
+    marker='+',ci=None)
+    if title:
+        plt.title(title)
+    if savedname:
+        plt.savefig(savedname, bbox_inches='tight')
+    plt.show()
 
 class Domain(object):
     '''
