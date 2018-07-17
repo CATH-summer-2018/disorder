@@ -11,13 +11,16 @@ import matplotlib
 import matplotlib.pyplot as plt
 import scipy
 import seaborn as sns
+import plotly
+import plotly.graph_objs as go
+import plotly.plotly as py
 
 import nglview
 
 
 def plt_scatter(s, col1, col2,
                 col_cutoff=False, cutoff=False,
-                savedname=False, title=False):
+                savedname=False, title=False, marksize=15):
     '''
     Plots the scatter plot for 2 columns in the dataframe
     '''
@@ -35,16 +38,34 @@ def plt_scatter(s, col1, col2,
         y_under = under.sort_values(by=col1)[col1].values
         x_over = over.sort_values(by=col1)[col2].values
         y_over = over.sort_values(by=col1)[col1].values
-        ax.scatter(x_under, y_under, s=15, marker='x', c='#1E70AA')
-        ax.scatter(x_over, y_over, s=15, marker='x', c='blue')
+        ax.scatter(x_under, y_under, s=marksize, marker='x', c='#1E70AA')
+        ax.scatter(x_over, y_over, s=marksize, marker='x', c='blue')
     else:
-        ax.scatter(x, y, s=15, marker='x', c='#1E70AA')
+        ax.scatter(x, y, s=marksize, marker='.', c='#1E70AA')
     if title:
         plt.title(title)
     if savedname:
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
 
+def plt_inter_scatter(s, col1, col2, savedname='./figs/tmp', show='jup',
+                col_cutoff=False, cutoff=False, title=False, marksize=15):
+    '''
+    Plots the scatter plot for 2 columns in the dataframe
+    '''
+    trace=go.Scatter(
+    x = s[col1],
+    y = s[col2],
+    mode = 'markers',
+    marker=dict(size=5,
+               color = 'rgba(0, 0, 255, .4)'),
+    text= s.index)
+
+    data=[trace]
+    if show == 'jup':
+        plotly.offline.iplot(data)
+    elif show == 'html':
+        plotly.offline.plot(data, filename=savedname)
 
 def plt_regplot(s, col1, col2,
                 savedname=False, title=False):
@@ -59,9 +80,9 @@ def plt_regplot(s, col1, col2,
     ax.set_xlabel(col2)
     ax.set_ylabel(col1)
     sns.regplot(x, y,
-    scatter_kws={"s": 15},
+    scatter_kws={"s": 5},
     line_kws={'color':'blue'},
-    marker='+',ci=None)
+    marker='.',ci=None)
     if title:
         plt.title(title)
     if savedname:

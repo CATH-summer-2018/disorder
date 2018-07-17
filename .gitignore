@@ -10,3 +10,4 @@ data
 *.results
 *.csv
 chain_history*
+*.odp
