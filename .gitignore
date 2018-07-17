@@ -11,3 +11,4 @@ data
 *.csv
 chain_history*
 *.odp
+*.html
