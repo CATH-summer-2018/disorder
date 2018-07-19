@@ -9,7 +9,9 @@ data
 !.gitignore
 *.results
 *.csv
+*.tsv
 chain_history*
 *.odp
 *.html
-S35_rep.tsv
+distance_matrices
+percent_overlap

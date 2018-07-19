@@ -13,9 +13,50 @@ import seaborn as sns
 import plotly
 import plotly.graph_objs as go
 import plotly.plotly as py
+import plotly.figure_factory as ff
 import py3Dmol
 
 ### PLOTS
+
+def exclude_missing_data(matrix):
+    if matrix.count().min() == matrix.count().max():
+        return matrix
+    include = matrix[matrix.count() != matrix.count().min()]
+    return include[include.index]
+
+def plot_dendro(sfam, method='ssap', show='jup'):
+    '''
+    Plots dendrogram from the distance matrix (SSAP/overlap)
+    '''
+
+
+    if method == 'ssap':
+        directory = './distance_matrices/'
+    elif method == 'over':
+        directory = './percent_overlap/'
+    else:
+        print('Unknown method')
+        return
+    t = exclude_missing_data(fetch_sfam_matrix(sfam, method=method))
+    names = t.index
+    dendro = ff.create_dendrogram(t.fillna(0), labels=names)
+    dendro['layout'].update({'width':800, 'height':500})
+    if show == 'jup':
+        plotly.offline.iplot(dendro, filename='simple_dendrogram')
+    elif show == 'html':
+        plotly.offline.plot(dendro, filename='simple_dendrogram')
+    else:
+        print("Unknown show method")
+
+def fetch_sfam_matrix(sfam_id, method='ssap'):
+    if method == 'ssap':
+        directory = './distance_matrices/'
+    elif method == 'over':
+        directory = './percent_overlap/'
+    else:
+        print('Unknown method')
+        return
+    return pd.read_csv(directory+sfam_id, sep='\t', index_col=0)
 
 def plt_scatter(s, col1, col2,
                 col_cutoff=False, cutoff=False,
@@ -63,10 +104,9 @@ def plt_inter_scatter(s, col1, col2, savedname='./figs/tmp.html', show='jup',
                hoverinfo='text',
     text= 'ID: ' + s.index + '<br> ' + col1 + ': ' + x.round(3).astype(str) + '<br>'+ col2 + ': ' + y.round(3).astype(str),
     line=dict(width=2))
-
     data=[trace]
     layout = go.Layout(dict(hovermode='closest',
-    title='Disorder scatterplot',
+    title='Correlation coefficient is ' + str(round(x.corr(y),3)),
     xaxis= dict(
         title=col1,
         ticklen= 5,
@@ -106,14 +146,14 @@ def plt_regplot(s, col1, col2,
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
 
-def plot_heat(data, annot=False, savedname=False):
+def plot_clustermap(data, annot=False, savedname=False, fixsize=False):
     '''
     Plots heatmap from the distance matrix
     '''
-    fig, ax = plt.subplots(figsize=(30,30))
-    mask = np.zeros_like(data)
-    mask[np.triu_indices_from(mask)] = True
-    sns.heatmap(data, mask=mask, annot=annot)
+    if fixsize:
+        sns.clustermap(exclude_missing_data(data).fillna(0), annot=annot, figsize=data.shape)
+    else:
+        sns.clustermap(exclude_missing_data(data).fillna(0), annot=annot)
     if savedname:
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
@@ -248,7 +288,7 @@ class DomParser(object):
 ### CALCULATIONS
 
 
-def distance_matrix(df, sfam_id):
+def distance_matrix(df, sfam_id, metric):
     '''
     Returns distance matrix for one sfam
     '''
@@ -260,28 +300,41 @@ def distance_matrix(df, sfam_id):
         w['match'] = w.query_id.combine(w.match_id, lambda x, y: x if x != item else y)
         w.drop_duplicates(subset='match', keep='last', inplace=True)
         w.set_index('match', inplace=True)
-        t[item] = w['ssap_score']
+        t[item] = w[metric]
     return t
 
-def normalised_SSAP(t):
-    '''
-    Returns normalised SSAP scores
-    '''
-    return (t.mean() - t.mean().mean()).abs().sort_values()
-
-
-def all_SSAP(ssap, ind):
-    '''
-    Returns a dictionary with info for SSAP for SFAMs
-    '''
-    mean_SSAP = pd.Series()
-    min_SSAP = pd.Series()
-    mean_std_SSAP = pd.Series()
+def write_matrices(ssap, ind, metric, location):
     for i in ind:
-        t = distance_matrix(ssap, i).mean()
-        mean_SSAP[i] = t.mean()
-        min_SSAP[i] = t.min()
-        mean_std_SSAP[i] = t.std()
-    return pd.DataFrame({'MEAN_SSAP':mean_SSAP,
-                        'MIN_SSAP':min_SSAP,
-                        'MEAN_STD_SSAP':mean_std_SSAP})
+        t = distance_matrix(ssap, i, metric)
+        t.to_csv(location+i, sep='\t')
+
+
+def get_domain_ssap(ssap, domain):
+    return ssap[(ssap.query_id == domain) | (ssap.match_id == domain)]
+
+def compile_means(sfam):
+    '''
+    Gets mean for SSAP and overlap for one sfam
+    '''
+    ssap = pd.read_csv('./distance_matrices/'+sfam, sep='\t')
+    over = pd.read_csv('./percent_overlap/'+sfam, sep='\t')
+    ret = pd.DataFrame({"SSAP" : ssap.mean(),
+                        "STD_SSAP" : ssap.std(),
+                        "OVER" : over.mean(),
+                       "STD_OVER" : over.std()})
+    return ret
+
+
+
+# def study_matrices(ind):
+#     mean_SSAP = pd.Series()
+#     min_SSAP = pd.Series()
+#     mean_std_SSAP = pd.Series()
+#     for i in ind:
+#         t = pd.re
+#         mean_SSAP[i] = t.mean()
+#         min_SSAP[i] = t.min()
+#         mean_std_SSAP[i] = t.std()
+#     return pd.DataFrame({'MEAN_SSAP':mean_SSAP,
+#                         'MIN_SSAP':min_SSAP,
+#                         'MEAN_STD_SSAP':mean_std_SSAP})
