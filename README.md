@@ -72,6 +72,8 @@ As we can see from the clustermap below, most domains have a relatively high SSA
 Visual analysis confirms that 2ckjB00 looks different than other domains
 
 **2ckjB00**
+
+
 ![2ckjB00](./figs/2ckjB00.png)
 
 **3hrdB01**

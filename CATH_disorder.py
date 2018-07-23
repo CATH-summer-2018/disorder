@@ -150,14 +150,24 @@ def plot_clustermap(data, annot=False, savedname=False, fixsize=False):
     '''
     Plots heatmap from the distance matrix
     '''
+    my_cmap = sns.diverging_palette(240, 10, n=9, as_cmap=True)
     if fixsize:
-        sns.clustermap(exclude_missing_data(data).fillna(0), annot=annot, figsize=data.shape)
+        sns.clustermap(exclude_missing_data(data).fillna(100),
+        annot=annot,
+        figsize=data.shape,
+        method='average',
+        vmin=0, vmax=100, fmt='.0f')
     else:
-        sns.clustermap(exclude_missing_data(data).fillna(0), annot=annot)
+        sns.clustermap(exclude_missing_data(data).fillna(100),
+        annot=annot,
+        figsize=(12,12),
+        method='average',
+        vmin=0, vmax=100, fmt='.0f')
+
+
     if savedname:
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
-
 
 
 ### CLASSES
