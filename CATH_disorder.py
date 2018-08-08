@@ -172,57 +172,66 @@ def plot_clustermap(data, annot=False, savedname=False, fixsize=False):
 
 ### CLASSES
 
-class Domain(object):
+# class Domain(object):
+#     '''
+#     Class for fetching stuff for a domain
+#     '''
+#     def __init__(self, df, domain):
+#         self.domain = domain
+#         self.long = pd.read_csv('./individual_fasta/'+df.loc[domain]['SFAM']+'/'+domain+'.long', sep='\t', index_col=0)
+#         self.short = pd.read_csv('./individual_fasta/'+df.loc[domain]['SFAM']+'/'+domain+'.short', sep='\t', index_col=0)
+#
+#     def plot_disorder(self, method='both'):
+#         '''
+#         Plots the disorder for individual domain
+#         '''
+#         fig, ax = plt.subplots(figsize=(15,5))
+#         ax.plot([0, len(self.long)], [0.5,0.5], color='black', linewidth=0.7)
+#         ax.set_xlim(0, len(self.long))
+#         ax.set_ylim(0,1)
+#         if method == 'long':
+#             ax.plot(self.long.DIS)
+#         elif method == 'short':
+#             ax.plot(self.short.DIS)
+#         elif method == 'both':
+#             ax.plot(self.long.DIS, color='blue', label='LONG')
+#             ax.plot(self.short.DIS, color='orange', label='SHORT')
+#             plt.legend()
+#         else:
+#             print("Wrong method")
+#         plt.show()
+
+
+def show_structure(domain, full=False):
     '''
-    Class for fetching stuff for a domain
+    Uses py3Dmol and requests to fetch domain PDB and show it in jupyter
     '''
-    def __init__(self, df, domain):
-        self.domain = domain
-        self.long = pd.read_csv('./individual_fasta/'+df.loc[domain]['SFAM']+'/'+domain+'.long', sep='\t', index_col=0)
-        self.short = pd.read_csv('./individual_fasta/'+df.loc[domain]['SFAM']+'/'+domain+'.short', sep='\t', index_col=0)
+    view = py3Dmol.view()
 
-    def plot_disorder(self, method='both'):
-        '''
-        Plots the disorder for individual domain
-        '''
-        fig, ax = plt.subplots(figsize=(15,5))
-        ax.plot([0, len(self.long)], [0.5,0.5], color='black', linewidth=0.7)
-        ax.set_xlim(0, len(self.long))
-        ax.set_ylim(0,1)
-        if method == 'long':
-            ax.plot(self.long.DIS)
-        elif method == 'short':
-            ax.plot(self.short.DIS)
-        elif method == 'both':
-            ax.plot(self.long.DIS, color='blue', label='LONG')
-            ax.plot(self.short.DIS, color='orange', label='SHORT')
-            plt.legend()
-        else:
-            print("Wrong method")
-        plt.show()
-
-
-    def show_structure(self):
-        '''
-        Uses py3Dmol and requests to fetch domain PDB and show it in jupyter
-        '''
-        view = py3Dmol.view()
-
-        def adjust_looks(view):
-            view.setStyle({'cartoon':{'colorscheme':'ssJmol'}})
-            view.center()
-            return view
-
-        if (self.domain + '.pdb') in os.listdir('structures'):
-            with open('./structures/'+self.domain+'.pdb') as file:
+    def adjust_looks(view):
+        view.setStyle({'cartoon':{'colorscheme':'ssJmol'}})
+        view.center()
+        return view
+    if full:
+        prot = domain[:4].upper()
+        if (prot + '.pdb') in os.listdir('structures'):
+            with open('./structures/'+prot+'.pdb') as file:
                 view.addModel(file.read(), 'pdb')
-                return adjust_looks(view)
         else:
-            r = requests.get('http://www.cathdb.info/version/v4_2_0/api/rest/id/' + self.domain + '.pdb')
-            with open('./structures/' + self.domain + '.pdb', 'w') as file:
+            r = requests.get('https://files.rcsb.org/download/' + prot + '.pdb')
+            with open('./structures/' + prot + '.pdb', 'w') as file:
                 file.write(r.text)
             view = view.addModel(r.text, 'pdb')
-            return adjust_looks(view)
+    else:
+        if (domain + '.pdb') in os.listdir('structures'):
+            with open('./structures/'+domain+'.pdb') as file:
+                view.addModel(file.read(), 'pdb')
+        else:
+            r = requests.get('http://www.cathdb.info/version/v4_2_0/api/rest/id/' + domain + '.pdb')
+            with open('./structures/' + domain + '.pdb', 'w') as file:
+                file.write(r.text)
+            view = view.addModel(r.text, 'pdb')
+    return adjust_looks(view)
 
 
 class DomParser(object):

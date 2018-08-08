@@ -2,7 +2,6 @@
 !.gitignore
 *.results
 *.csv
-*.tsv
 *.odp
 *.html
 *.gz
@@ -13,4 +12,4 @@ distance_matrices
 percent_overlap
 redundant
 individual_fasta
-
+structures
