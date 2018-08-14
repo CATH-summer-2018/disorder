@@ -92,25 +92,58 @@ def plt_scatter(s, col1, col2,
         plt.savefig(savedname, bbox_inches='tight')
     plt.show()
 
-def plt_inter_scatter(s, col1, col2, savedname='./figs/tmp.html', show='jup',
-                col_cutoff=False, cutoff=False, title=False, marksize=15):
+
+def plt_scatter_discrete(s, col1, col2,
+                col_colour=False,
+                savedname=False, title=False, marksize=15):
+    '''
+    Plots the scatter plot for 2 columns in the dataframe and gives differing colout based on 3rd column
+    '''
+    fig, ax = plt.subplots(figsize=(15,15))
+    x = s.sort_values(by=col1)[col2].values
+    y = s.sort_values(by=col1)[col1].values
+    ax.set_xlim(min(x), max(x))
+    ax.set_ylim(min(y), max(y))
+    ax.set_xlabel(col2)
+    ax.set_ylabel(col1)
+    values = s[col_colour].value_counts().index.tolist()
+    graphlist = []
+    for value in values:
+        colour = s[s[col_colour] == value]
+        x_colour = colour.sort_values(by=col1)[col2].values
+        y_colour = colour.sort_values(by=col1)[col1].values
+        graphlist.append(ax.scatter(x_colour, y_colour, s=marksize, marker='x'))
+    plt.legend(graphlist, values)
+    if title:
+        plt.title(title)
+    if savedname:
+        plt.savefig(savedname, bbox_inches='tight')
+    plt.show()
+
+def plt_inter_scatter_discrete(s, col1, col2, col_colour, savedname='./figs/tmp.html', show='jup',
+                 title=False, marksize=10):
     '''
     Plots the interactive scatter plot for 2 columns in the dataframe with plotly
     '''
-    x = s[col1]
-    y = s[col2]
-    trace=go.Scatter(
-    x=x,
-    y=y,
-    mode = 'markers',
-    marker=dict(size=5,
-               color = 'rgba(0, 0, 255, .4)'),
-               hoverinfo='text',
-    text= 'ID: ' + s.index + '<br> ' + col1 + ': ' + x.round(3).astype(str) + '<br>'+ col2 + ': ' + y.round(3).astype(str),
-    line=dict(width=2))
-    data=[trace]
+    values = s[col_colour].value_counts().index.tolist()
+    data = []
+    colormap = ['#ff0000', '#00aa00', '#0000ff', '#ff00ff']
+    for value in values:
+        colour = s[s[col_colour] == value]
+        x_colour = colour.sort_values(by=col1)[col2].values
+        y_colour = colour.sort_values(by=col1)[col1].values
+        trace=go.Scatter(
+            x=x_colour,
+            y=y_colour,
+            mode = 'markers',
+            marker=dict(size=5,color=colormap[values.index(value)]),
+                    hoverinfo='text',
+            text= 'ID: ' + colour.index + '<br> ' + col1 + ': ' + x_colour.round(3).astype(str) + '<br>'+ col2 + ': ' + y_colour.round(3).astype(str),
+            line=dict(width=2))
+        data.append(trace)
+
     layout = go.Layout(dict(hovermode='closest',
-    title='Correlation coefficient is ' + str(round(x.corr(y),3)),
+    title = 'Scatterplot for ' + col1 + ' and ' + col2 + ' coloured by ' + col_colour,
     xaxis= dict(
         title=col1,
         ticklen= 5,
