@@ -6,6 +6,7 @@
 *.html
 *.gz
 *.out
+*.txt
 
 __pycache__
 distance_matrices
@@ -13,4 +14,5 @@ percent_overlap
 redundant
 individual_fasta
 structures
-playground.ipynb
+playground*
+report

@@ -17,6 +17,20 @@ import plotly.figure_factory as ff
 import py3Dmol
 
 ### PLOTS
+def plot_stats(df, col, val,
+              title=False, savedname=False):
+    plt.rcParams['font.size'] = 24
+    fig, ax = plt.subplots(figsize=(10,10))
+    for t in df[col].unique():
+        ax.bar(t, df[df[col] == t][val].mean(), width=0.7)
+    plt.ylabel(val)
+    plt.xlabel(col)
+    ax.axhline(y=0, color='k')
+    if title:
+        plt.title(title)
+    if savedname:
+        plt.savefig(savedname, bbox_inches='tight')
+    plt.show()
 
 def exclude_missing_data(matrix):
     '''
@@ -130,9 +144,10 @@ def plt_inter_scatter_discrete(s, col1, col2, col_colour, savedname='./figs/tmp.
     colormap = ['#ff0000', '#00aa00', '#0000ff', '#ff00ff']
     for value in values:
         colour = s[s[col_colour] == value]
-        x_colour = colour.sort_values(by=col1)[col2].values
-        y_colour = colour.sort_values(by=col1)[col1].values
+        x_colour = colour.sort_values(by=col1)[col1].values
+        y_colour = colour.sort_values(by=col1)[col2].values
         trace=go.Scatter(
+            name=value,
             x=x_colour,
             y=y_colour,
             mode = 'markers',
